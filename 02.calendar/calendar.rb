@@ -18,15 +18,13 @@ month_year = Date.today.strftime("#{today_month}月 #{today_year}")
 puts month_year.center(20)
 puts "日 月 火 水 木 金 土"
 (first_day..last_day).each do |day|
-  if first_day == day && day.saturday?
-    print "   " * first_day.wday, "#{day.day}".rjust(2),"\n"
-  elsif first_day == day
-    print "   " * first_day.wday, "#{day.day}".rjust(2)," "
-  elsif day.saturday?
-    print "#{day.day}".rjust(2),"\n"
-  elsif
-    print "#{day.day}".rjust(2)," "
-  elsif last_day == day
-    print "\n","\n"
+  if first_day == day
+    print "   " * first_day.wday
+  end
+  
+  print "#{day.day}".rjust(2)," "
+
+  if day.saturday?
+    print "\n"
   end
 end
