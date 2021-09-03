@@ -22,18 +22,16 @@ frames << shots.slice(18, 20)
 
 points = []
 frames.each_with_index do |point, index|
-  frames[index + 2] ||= 0
-  if point[0] == 10 && frames[index + 1][0] == 10 && points.size < 9
-    points << point.sum + frames[index + 1][0..1].sum + frames[index + 2][0]
-  elsif point[0] == 10 && points.size < 9
-    points << point.sum + frames[index + 1][0..1].sum
-  elsif point[0] + point[1] == 10 && points.size < 9
-    points << point.sum + frames[index + 1][0]
-  elsif points.size <= 9
-    points << point.sum
-  else
-    break
-  end
+  points <<
+    if point[0] == 10 && points.size < 8 && frames[index + 1][0] == 10
+      point.sum + frames[index + 1][0..1].sum + frames[index + 2][0]
+    elsif point[0] == 10 && points.size < 9
+      point.sum + frames[index + 1][0..1].sum
+    elsif point[0] + point[1] == 10 && points.size < 9
+      point.sum + frames[index + 1][0]
+    else
+      point.sum
+    end
 end
 
 p points.sum
