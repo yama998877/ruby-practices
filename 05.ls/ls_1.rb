@@ -14,12 +14,8 @@ end
 number_of_columns = 3.0
 number_of_lines = (empty_space_added_directories.size / number_of_columns).ceil
 
-if empty_space_added_directories.size < number_of_columns
-  (number_of_columns - empty_space_added_directories.size).to_i.times { empty_space_added_directories << nil }
-end
-
-nil_add = ((number_of_columns * number_of_lines) - empty_space_added_directories.size).to_i
-nil_add.times { empty_space_added_directories << nil }
+nil_padding = ((number_of_columns * number_of_lines) - empty_space_added_directories.size).to_i
+nil_padding.times { empty_space_added_directories << nil }
 
 directory_lines = []
 empty_space_added_directories.each_slice(number_of_lines) do |directory_columns|
