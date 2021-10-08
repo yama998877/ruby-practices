@@ -2,7 +2,8 @@
 
 class Option
   require 'optparse'
-  def initialize
+  def initialize(argv)
+    @argv = argv
     @options = {}
     OptionParser.new do |o|
       o.on('-a') { |v| @options[:a] = v }
@@ -14,13 +15,13 @@ class Option
     @options.include?(name)
   end
 
-  def pull_extra
+  def pull_directory
     ARGV[0]
   end
 end
 
-option = Option.new
-specified_directory = option.pull_extra
+option = Option.new(ARGV)
+specified_directory = option.pull_directory
 directories =
   if option.has?(:a)
     Dir.glob('*', File::FNM_DOTMATCH, base: specified_directory)
