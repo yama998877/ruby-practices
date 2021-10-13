@@ -7,7 +7,7 @@ class Option
     @options = {}
     OptionParser.new do |o|
       o.on('-a') { |v| @options[:a] = v }
-      o.parse!(ARGV)
+      o.parse!(@argv)
     end
   end
 
@@ -15,18 +15,17 @@ class Option
     @options.include?(name)
   end
 
-  def pull_directory
-    ARGV[0]
+  def specified_directory
+    @argv[0]
   end
 end
 
 option = Option.new(ARGV)
-specified_directory = option.pull_directory
 directories =
   if option.has?(:a)
-    Dir.glob('*', File::FNM_DOTMATCH, base: specified_directory)
+    Dir.glob('*', File::FNM_DOTMATCH, base: option.specified_directory)
   else
-    Dir.glob('*', base: specified_directory)
+    Dir.glob('*', base: option.specified_directory)
   end
 max_size_directory = directories.max_by(&:length)
 return if directories == []
