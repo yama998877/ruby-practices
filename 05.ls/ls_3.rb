@@ -28,12 +28,8 @@ directories =
   else
     Dir.glob('*', base: option.specified_directory)
   end
-directories =
-  if option.has?(:r)
-    directories.reverse
-  else
-    directories
-  end
+directories = directories.reverse if option.has?(:r)
+
 max_size_directory = directories.max_by(&:length)
 return if directories == []
 
