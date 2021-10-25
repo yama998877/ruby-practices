@@ -23,14 +23,16 @@ end
 
 option = Option.new(ARGV)
 directories =
-  if option.has?(:a) && option.has?(:r)
-    Dir.glob('*', File::FNM_DOTMATCH, base: option.specified_directory).reverse
-  elsif option.has?(:r)
-    Dir.glob('*', base: option.specified_directory).reverse
-  elsif option.has?(:a)
+  if option.has?(:a)
     Dir.glob('*', File::FNM_DOTMATCH, base: option.specified_directory)
   else
     Dir.glob('*', base: option.specified_directory)
+  end
+directories =
+  if option.has?(:r)
+    directories.reverse
+  else
+    directories
   end
 max_size_directory = directories.max_by(&:length)
 return if directories == []
