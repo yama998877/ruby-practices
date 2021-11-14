@@ -33,7 +33,7 @@ def convert_file_type_into_character(name)
   }[name]
 end
 
-def convert_octal_number_into_character(name)
+def convert_octal_number_into_character(number)
   {
     '0' => '---',
     '1' => '--x',
@@ -43,7 +43,7 @@ def convert_octal_number_into_character(name)
     '5' => 'r-x',
     '6' => 'rw-',
     '7' => 'rwx'
-  }[name]
+  }[number]
 end
 
 option = Option.new(ARGV)
