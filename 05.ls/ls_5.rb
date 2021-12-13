@@ -59,26 +59,28 @@ def permission_char(octal_number)
   }[octal_number]
 end
 
-def selected_path(option, dir_file)
-  if option.specified_directory_file.nil?
-    File::Stat.new(dir_file)
-  elsif option.file_specified?
-    File::Stat.new(dir_file)
+def select_path(option, dir_file)
+  if option.specified_directory_file.nil? || option.file_specified?
+    dir_file
   else
-    File::Stat.new(option.specified_directory_file + dir_file)
+    option.specified_directory_file + dir_file
   end
 end
 
-def fs_list(file_status, file_mode, user_name, group_name, dir_file)
-  file_type_char(file_status.ftype) +
-    permission_char(file_mode[3]) +
-    permission_char(file_mode[4]) +
-    permission_char(file_mode[5]) +
-    " #{file_status.nlink.to_s.rjust(3)}"\
-    " #{user_name}  #{group_name}"\
-    " #{file_status.size.to_s.rjust(6)}"\
-    " #{file_status.mtime.mon.to_s.rjust(2)}"\
-    " #{file_status.mtime.strftime('%e %R')} #{dir_file}"
+def fs_list(file_stats, file_mode, user_name, group_name, dir_file)
+  [
+    file_type_char(file_stats.ftype),
+    permission_char(file_mode[3]),
+    permission_char(file_mode[4]),
+    permission_char(file_mode[5]),
+    file_stats.nlink.to_s.rjust(3),
+    user_name.rjust(11),
+    group_name.rjust(6),
+    file_stats.size.to_s.rjust(5),
+    file_stats.mtime.mon.to_s.rjust(3),
+    file_stats.mtime.strftime(' %e %R '),
+    dir_file
+  ].join
 end
 
 def ls_main(directories)
@@ -106,10 +108,9 @@ option = Option.new(ARGV)
 directories =
   if option.file_specified?
     Dir.glob(option.specified_file)
-  elsif option.has?(:a)
-    Dir.glob('*', File::FNM_DOTMATCH, base: option.specified_directory_file)
   else
-    Dir.glob('*', base: option.specified_directory_file)
+    flags = option.has?(:a) ? File::FNM_DOTMATCH : 0
+    Dir.glob('*', flags, base: option.specified_directory_file)
   end
 
 directories = directories.reverse if option.has?(:r)
@@ -124,14 +125,14 @@ if option.has?(:l)
   block_size = 0
   long_lists = []
   directories.each do |dir_file|
-    file_status = selected_path(option, dir_file)
-    block_size += file_status.blocks
-    user_id    = file_status.uid
-    user_name  = Etc.getpwuid(user_id).name
-    group_id   = file_status.gid
+    file_stats = File::Stat.new(select_path(option, dir_file))
+    block_size += file_stats.blocks
+    user_id = file_stats.uid
+    user_name = Etc.getpwuid(user_id).name
+    group_id = file_stats.gid
     group_name = Etc.getgrgid(group_id).name
-    file_mode = format('%06d', file_status.mode.to_s(8))
-    long_lists << fs_list(file_status, file_mode, user_name, group_name, dir_file)
+    file_mode = format('%06d', file_stats.mode.to_s(8))
+    long_lists << fs_list(file_stats, file_mode, user_name, group_name, dir_file)
   end
   puts "total #{block_size}" unless option.file_specified?
   puts long_lists
