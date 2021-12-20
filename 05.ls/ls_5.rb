@@ -32,6 +32,11 @@ class Option
   def specified_directory_file
     @argv[0]
   end
+
+  def specified_file_not_found?
+    directory_file_name = specified_directory_file.to_s
+    !directory_file_name.empty? && !FileTest.exist?(directory_file_name)
+  end
 end
 
 def file_type_char(name)
@@ -140,11 +145,7 @@ directories_files =
 
 directories_files = directories_files.reverse if option.has?(:r)
 
-directory_file_path
-
-if !option.specified_directory_file.to_s.empty? && !FileTest.exist?(option.specified_directory_file.to_s)
-  puts "ls: #{option.specified_directory_file}: No such file or directory"
-end
+puts "ls: #{option.specified_directory_file}: No such file or directory" if option.specified_file_not_found?
 
 return if directories_files == []
 
