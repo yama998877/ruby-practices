@@ -83,48 +83,18 @@ def fs_list(file_stats, file_mode, user_name, group_name, dir_file)
   ].join
 end
 
-def ls_main(directories)
-  max_size_directory = directories.max_by(&:length)
-  max_size = max_size_directory.size + WHITE_SPACE
-
-  white_space_added_directories = directories.map { |white_space_added_directory| white_space_added_directory.ljust(max_size) }
-
-  number_of_lines = (white_space_added_directories.size.to_f / NUMBER_OF_COLUMNS).ceil
-
-  nil_padding = ((NUMBER_OF_COLUMNS * number_of_lines) - white_space_added_directories.size).to_i
-  nil_padding.times { white_space_added_directories << nil }
-
-  directory_lines = []
-  white_space_added_directories.each_slice(number_of_lines) do |directory_columns|
-    directory_lines << directory_columns
-  end
-
-  directory_lines.transpose.each do |file|
-    puts file.join
-  end
-end
-
-option = Option.new(ARGV)
-directories =
-  if option.file_specified?
-    Dir.glob(option.specified_file)
+def main(directories_files, option)
+  if option.has?(:l)
+    l_option_ls(directories_files, option)
   else
-    flags = option.has?(:a) ? File::FNM_DOTMATCH : 0
-    Dir.glob('*', flags, base: option.specified_directory_file)
+    column_ls(directories_files)
   end
-
-directories = directories.reverse if option.has?(:r)
-
-if option.specified_directory_file.to_s.empty? != true && FileTest.exist?(option.specified_directory_file.to_s) != true
-  puts "ls: #{option.specified_directory_file}: No such file or directory"
 end
 
-return if directories == []
-
-if option.has?(:l)
+def l_option_ls(directories_files, option)
   block_size = 0
   long_lists = []
-  directories.each do |dir_file|
+  directories_files.each do |dir_file|
     file_stats = File::Stat.new(select_path(option, dir_file))
     block_size += file_stats.blocks
     user_id = file_stats.uid
@@ -136,6 +106,46 @@ if option.has?(:l)
   end
   puts "total #{block_size}" unless option.file_specified?
   puts long_lists
-else
-  ls_main(directories)
 end
+
+def column_ls(directories_files)
+  max_size_directory = directories_files.max_by(&:length)
+  max_size = max_size_directory.size + WHITE_SPACE
+
+  white_space_added_directories_files = directories_files.map { |white_space_added_directory| white_space_added_directory.ljust(max_size) }
+
+  number_of_lines = (white_space_added_directories_files.size.to_f / NUMBER_OF_COLUMNS).ceil
+
+  nil_padding = ((NUMBER_OF_COLUMNS * number_of_lines) - white_space_added_directories_files.size).to_i
+  nil_padding.times { white_space_added_directories_files << nil }
+
+  directory_lines = []
+  white_space_added_directories_files.each_slice(number_of_lines) do |directory_columns|
+    directory_lines << directory_columns
+  end
+
+  directory_lines.transpose.each do |file|
+    puts file.join
+  end
+end
+
+option = Option.new(ARGV)
+directories_files =
+  if option.file_specified?
+    Dir.glob(option.specified_file)
+  else
+    flags = option.has?(:a) ? File::FNM_DOTMATCH : 0
+    Dir.glob('*', flags, base: option.specified_directory_file)
+  end
+
+directories_files = directories_files.reverse if option.has?(:r)
+
+directory_file_path
+
+if !option.specified_directory_file.to_s.empty? && !FileTest.exist?(option.specified_directory_file.to_s)
+  puts "ls: #{option.specified_directory_file}: No such file or directory"
+end
+
+return if directories_files == []
+
+main(directories_files, option)
