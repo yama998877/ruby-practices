@@ -39,29 +39,40 @@ class Option
   end
 end
 
-def file_type_char(name)
-  {
-    'fifo' => 'p',
-    'characterSpecial' => 'c',
-    'directory' => 'd',
-    'blockSpecial' => 'b',
-    'file' => '-',
-    'link' => 'l',
-    'socket' => 's'
-  }[name]
+def main
+  option = Option.new(ARGV)
+  directories_files =
+    if option.file_specified?
+      Dir.glob(option.specified_file)
+    else
+      flags = option.has?(:a) ? File::FNM_DOTMATCH : 0
+      Dir.glob('*', flags, base: option.specified_directory_file)
+    end
+
+  directories_files = directories_files.reverse if option.has?(:r)
+
+  puts "ls: #{option.specified_directory_file}: No such file or directory" if option.specified_file_not_found?
+
+  return if directories_files == []
+
+  option.has?(:l) ? l_option_ls(directories_files, option) : column_ls(directories_files)
 end
 
-def permission_char(octal_number)
-  {
-    '0' => '---',
-    '1' => '--x',
-    '2' => '-w-',
-    '3' => '-wx',
-    '4' => 'r--',
-    '5' => 'r-x',
-    '6' => 'rw-',
-    '7' => 'rwx'
-  }[octal_number]
+def l_option_ls(directories_files, option)
+  block_size = 0
+  long_lists = []
+  directories_files.each do |dir_file|
+    file_stats = File::Stat.new(select_path(option, dir_file))
+    block_size += file_stats.blocks
+    user_id = file_stats.uid
+    user_name = Etc.getpwuid(user_id).name
+    group_id = file_stats.gid
+    group_name = Etc.getgrgid(group_id).name
+    file_mode = format('%06d', file_stats.mode.to_s(8))
+    long_lists << fs_list(file_stats, file_mode, user_name, group_name, dir_file)
+  end
+  puts "total #{block_size}" unless option.file_specified?
+  puts long_lists
 end
 
 def select_path(option, dir_file)
@@ -88,29 +99,29 @@ def fs_list(file_stats, file_mode, user_name, group_name, dir_file)
   ].join
 end
 
-def main(directories_files, option)
-  if option.has?(:l)
-    l_option_ls(directories_files, option)
-  else
-    column_ls(directories_files)
-  end
+def file_type_char(name)
+  {
+    'fifo' => 'p',
+    'characterSpecial' => 'c',
+    'directory' => 'd',
+    'blockSpecial' => 'b',
+    'file' => '-',
+    'link' => 'l',
+    'socket' => 's'
+  }[name]
 end
 
-def l_option_ls(directories_files, option)
-  block_size = 0
-  long_lists = []
-  directories_files.each do |dir_file|
-    file_stats = File::Stat.new(select_path(option, dir_file))
-    block_size += file_stats.blocks
-    user_id = file_stats.uid
-    user_name = Etc.getpwuid(user_id).name
-    group_id = file_stats.gid
-    group_name = Etc.getgrgid(group_id).name
-    file_mode = format('%06d', file_stats.mode.to_s(8))
-    long_lists << fs_list(file_stats, file_mode, user_name, group_name, dir_file)
-  end
-  puts "total #{block_size}" unless option.file_specified?
-  puts long_lists
+def permission_char(octal_number)
+  {
+    '0' => '---',
+    '1' => '--x',
+    '2' => '-w-',
+    '3' => '-wx',
+    '4' => 'r--',
+    '5' => 'r-x',
+    '6' => 'rw-',
+    '7' => 'rwx'
+  }[octal_number]
 end
 
 def column_ls(directories_files)
@@ -134,19 +145,4 @@ def column_ls(directories_files)
   end
 end
 
-option = Option.new(ARGV)
-directories_files =
-  if option.file_specified?
-    Dir.glob(option.specified_file)
-  else
-    flags = option.has?(:a) ? File::FNM_DOTMATCH : 0
-    Dir.glob('*', flags, base: option.specified_directory_file)
-  end
-
-directories_files = directories_files.reverse if option.has?(:r)
-
-puts "ls: #{option.specified_directory_file}: No such file or directory" if option.specified_file_not_found?
-
-return if directories_files == []
-
-main(directories_files, option)
+main
