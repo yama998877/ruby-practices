@@ -83,15 +83,14 @@ def space_added_filename(file)
 end
 
 def total_count_list(option, total_line_count, total_word_count, total_bytes_count)
-  if option.has?(:l) && option.specified_file.size > 1
-    print total_line_count.to_s.rjust(8).to_s
-    puts ' total'
-  elsif option.specified_file.size > 1
-    print total_line_count.to_s.rjust(8).to_s
+  return if option.specified_file.size <= 1
+
+  print total_line_count.to_s.rjust(8).to_s
+  unless option.has?(:l)
     print total_word_count.to_s.rjust(8).to_s
     print total_bytes_count.to_s.rjust(8)
-    puts ' total'
   end
+  puts ' total'
 end
 
 main
